@@ -40,10 +40,9 @@ package
 		public function Demo()
 		{
 			
-			testArray();
 
 //			testAES();
-//			testRSA();
+			testRSA();
 			
 			//it's not work
 //			testPEM2();
@@ -81,6 +80,61 @@ package
 			}
 			return ba;
 		}
+		
+		
+		public function testRSA():void
+		{
+			var message:String = "this is a plain text. 这是一段文本。";
+			//加密
+			var rsaKey:RSAKey = RSAKey.parsePublicKey(MODULUS,EXPONENT);
+			var data:ByteArray = rsaEncrypt(message,rsaKey);
+			var s:String = "";
+			data.position = 0;
+			for(var i:int = 0;i<data.length;i++){
+				s = s + data.readByte() + ",";
+			}
+			
+			//用来给后端解密测试
+			trace(s);
+			
+			//私钥解密
+			var privateKey:RSAKey = PEM.readRSAPrivateKey(PRIVATE_KEY);
+			var dst:ByteArray = new ByteArray();
+			privateKey.decrypt(data,dst,data.length);
+			var result:String = Hex.toString(Hex.fromArray(dst));
+			trace("decrypt:"+result);
+			
+			
+			//后端的公钥加密( 前端无法正常解密，padding的计算问题）
+//			var dataArray:Array = [20, 66, 100, 122, 99, -85, 41, 11, -84, -117, 119, -36, -89, 43, -45, -117, -95, -128, 14, 13, -61, 75, 56, -49, 56, -122, 13, -57, -124, 79, 64, 5, -94, -67, 83, 37, 79, -84, 4, -16, -122, 41, 125, 61, 0, 63, 33, 37, 51, 127, 118, -50, -120, 56, 82, -71, -98, 53, -109, 107, 81, -7, -83, -94, 14, -58, 27, -61, 13, -78, -72, 80, 20, -60, -57, 84, -96, 15, 57, -72, 62, 15, 43, -33, 80, -3, 37, -51, -86, 107, -19, -115, -31, -114, 91, 34, 56, 85, 1, -127, 23, 22, 127, -27, 31, -38, -106, -106, -77, -80, -109, -16, -122, 92, -68, 51, -66, 75, 92, -36, 19, -84, 104, 106, 62, -2, -47, 77];
+//			data = toByteArray(dataArray);
+//			printByteArray(data);
+//			dst = new ByteArray();
+//			data.position = 0;
+//			privateKey.decrypt(data,dst,data.length);
+//			result = Hex.toString(Hex.fromArray(dst));
+//			trace("decrypt data from java:",result);
+
+		}
+			
+		public static function rsaEncrypt(data:String,key:RSAKey):ByteArray
+		{
+			var src:ByteArray = Hex.toArray(Hex.fromString(data));
+			var dst:ByteArray = new ByteArray();
+			key.encrypt(src,dst,src.length);//padding为pkcs1pad, mode其实为ECB
+			return dst;
+		}
+		
+		//source from lib, it's not work
+		public function testPEM2():void 
+		{
+			var pem:String = "-----BEGIN PUBLIC KEY-----\n" + 
+				"MCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAMkbduS4H0h7uM6V1BNV3M8CAwEAAQ==\n" + 
+				"-----END PUBLIC KEY-----";
+			var rsa:RSAKey = PEM.readRSAPublicKey(pem);
+			trace(rsa.dump());
+		}
+		
 		private static function printByteArray(ba:ByteArray):void
 		{
 			var s:String = "";
@@ -111,45 +165,7 @@ package
 			
 		}
 		
-		public function testRSA():void
-		{
-			var message:String = "this is a plain text. 这是一段文本。";
-			//加密
-			var rsaKey:RSAKey = RSAKey.parsePublicKey(MODULUS,EXPONENT);
-			var data:ByteArray = rsaEncrypt(message,rsaKey);
-			var s:String = "";
-			data.position = 0;
-			for(var i:int = 0;i<data.length;i++){
-				s = s + data.readByte() + ",";
-			}
-			
-			//用来给后端解密测试
-			trace(s);
-			
-			//私钥解密
-			var privateKey:RSAKey = PEM.readRSAPrivateKey(PRIVATE_KEY);
-			var dst:ByteArray = new ByteArray();
-			privateKey.decrypt(data,dst,data.length);
-			var result:String = Hex.toString(Hex.fromArray(dst));
-			trace("decrypt:"+result);
-		}
 		
-		public static function rsaEncrypt(data:String,key:RSAKey):ByteArray
-		{
-			var src:ByteArray = Hex.toArray(Hex.fromString(data));
-			var dst:ByteArray = new ByteArray();
-			key.encrypt(src,dst,src.length);//padding为pkcs1pad, mode其实为ECB
-			return dst;
-		}
 		
-		//source from lib, it's not work
-		public function testPEM2():void 
-		{
-			var pem:String = "-----BEGIN PUBLIC KEY-----\n" + 
-				"MCwwDQYJKoZIhvcNAQEBBQADGwAwGAIRAMkbduS4H0h7uM6V1BNV3M8CAwEAAQ==\n" + 
-				"-----END PUBLIC KEY-----";
-			var rsa:RSAKey = PEM.readRSAPublicKey(pem);
-			trace(rsa.dump());
-		}
 	}
 }
