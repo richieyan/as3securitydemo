@@ -39,8 +39,10 @@ package
 		
 		public function Demo()
 		{
+			
+			testArray();
 
-			testAES();
+//			testAES();
 //			testRSA();
 			
 			//it's not work
@@ -98,12 +100,23 @@ package
 			return bArray;
 		}
 		
+		public function testArray():void
+		{
+			var s:ByteArray = new ByteArray();
+			var ss:Array = ["ABC", "112121", "kll889"];
+			var o:Object = {"a":ss};
+			s.writeObject(o);
+			
+			printByteArray(s);
+			
+		}
+		
 		public function testRSA():void
 		{
 			var message:String = "this is a plain text. 这是一段文本。";
 			//加密
 			var rsaKey:RSAKey = RSAKey.parsePublicKey(MODULUS,EXPONENT);
-			var data:ByteArray = RSAUtil.encrypt(message,rsaKey);
+			var data:ByteArray = rsaEncrypt(message,rsaKey);
 			var s:String = "";
 			data.position = 0;
 			for(var i:int = 0;i<data.length;i++){
@@ -119,6 +132,14 @@ package
 			privateKey.decrypt(data,dst,data.length);
 			var result:String = Hex.toString(Hex.fromArray(dst));
 			trace("decrypt:"+result);
+		}
+		
+		public static function rsaEncrypt(data:String,key:RSAKey):ByteArray
+		{
+			var src:ByteArray = Hex.toArray(Hex.fromString(data));
+			var dst:ByteArray = new ByteArray();
+			key.encrypt(src,dst,src.length);//padding为pkcs1pad, mode其实为ECB
+			return dst;
 		}
 		
 		//source from lib, it's not work
